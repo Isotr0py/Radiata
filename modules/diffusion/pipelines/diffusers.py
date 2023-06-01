@@ -418,7 +418,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
         )
 
         # Hires.fix
-        if opts.hiresfix:
+        if opts.hiresfix.enable:
             opts.hiresfix.enable, self.stage_1st = False, True
             opts.image = self.__call__(
                 opts,
