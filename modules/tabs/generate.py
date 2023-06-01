@@ -26,12 +26,12 @@ def generate_fn(fn):
             seed,
             width,
             height,
-            init_image,
-            strength,
-        ) = as_list[0:12]
+        ) = as_list[0:10]
 
-        hiresfix_options = tuple(as_list[12:15])
-        multidiffusion_options = tuple(as_list[15:19])
+        hiresfix_options = tuple(as_list[10:13])
+        multidiffusion_options = tuple(as_list[13:17])
+
+        init_image, strength = as_list[17:19]
 
         plugin_values = dict(list(data.items())[19:])
 
@@ -139,7 +139,7 @@ class Generate(Tab):
                 with gr.Column(scale=1.25):
                     options = image_generation_options.common_options_ui()
 
-                    upscale_options = image_generation_options.upscale_options_ui()
+                    options += image_generation_options.upscale_options_ui()
                     options += image_generation_options.img2img_options_ui()
 
                     plugin_values = image_generation_options.plugin_options_ui()
@@ -155,7 +155,6 @@ class Generate(Tab):
             inputs={
                 *prompts,
                 *options,
-                *upscale_options,
                 *plugin_values_list,
             },
             outputs=[*outputs, generate_button],
