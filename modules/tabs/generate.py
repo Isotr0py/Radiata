@@ -25,13 +25,11 @@ def generate_fn(fn):
             height,
             hiresfix,
             multidiffusion,
-            hiresfix_mode,
-            hiresfix_scale,
             init_image,
             strength,
-        ) = as_list[0:16]
+        ) = as_list[0:14]
 
-        plugin_values = dict(list(data.items())[15:])
+        plugin_values = dict(list(data.items())[14:])
 
         opts = ImageGenerationOptions(
             prompt=prompt,
@@ -47,8 +45,6 @@ def generate_fn(fn):
             seed=seed,
             image=init_image,
             hiresfix=hiresfix,
-            hiresfix_mode=hiresfix_mode,
-            hiresfix_scale=hiresfix_scale,
             multidiffusion=multidiffusion,
         )
         yield from fn(self, opts, plugin_values)
@@ -135,7 +131,7 @@ class Generate(Tab):
                 with gr.Column(scale=1.25):
                     options = image_generation_options.common_options_ui()
 
-                    options += image_generation_options.hires_options_ui()
+                    options += image_generation_options.upscale_options_ui()
                     options += image_generation_options.img2img_options_ui()
 
                     plugin_values = image_generation_options.plugin_options_ui()

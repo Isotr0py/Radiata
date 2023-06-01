@@ -1,5 +1,6 @@
 import gradio as gr
 
+from api.models.diffusion import HiresOptions, MultidiffusionOptions
 from lib.diffusers.scheduler import SCHEDULERS
 from modules import plugin_loader
 
@@ -90,29 +91,60 @@ def common_options_ui():
     )
 
 
-def hires_options_ui():
+def upscale_options_ui():
     with gr.Row():
         with gr.Accordion("Upscaler", open=False):
             with gr.Row():
                 enable_hires = gr.Checkbox(label="Hires.fix")
                 enable_multidiff = gr.Checkbox(label="Multi-Diffusion")
-            with gr.Row():
-                upscaler_mode = gr.Dropdown(
-                    choices=[
-                        "bilinear",
-                        "bilinear-antialiased",
-                        "bicubic",
-                        "bicubic-antialiased",
-                        "nearest",
-                        "nearest-exact",
-                    ],
-                    value="bilinear",
-                    label="Latent upscaler mode",
-                )
-                scale_slider = gr.Slider(
-                    value=1.5, minimum=1, maximum=4, step=0.05, label="Upscale by"
-                )
-    return enable_hires, enable_multidiff, upscaler_mode, scale_slider
+            with gr.Accordion("Hires.fix Options", open=False):
+                with gr.Row():
+                    upscaler_mode = gr.Dropdown(
+                        choices=[
+                            "bilinear",
+                            "bilinear-antialiased",
+                            "bicubic",
+                            "bicubic-antialiased",
+                            "nearest",
+                            "nearest-exact",
+                        ],
+                        value="bilinear",
+                        label="Latent upscaler mode",
+                    )
+                    scale_slider = gr.Slider(
+                        value=1.5, minimum=1, maximum=4, step=0.05, label="Upscale by"
+                    )
+            with gr.Accordion("Multi-Diffusion Options", open=False):
+                with gr.Row():
+                    views_batch_size = gr.Slider(
+                        value=4, minimum=1, maximum=32, step=1, label="tile batch size"
+                    )
+                with gr.Row():
+                    window_size = gr.Slider(
+                        value=64,
+                        minimum=64,
+                        maximum=96,
+                        step=8,
+                        label="window size (latent)",
+                    )
+                    stride = gr.Slider(
+                        value=16, minimum=8, maximum=64, step=8, label="stride (latent)"
+                    )
+
+    hires = HiresOptions(
+        enable=enable_hires,
+        mode=upscaler_mode,
+        scale=scale_slider,
+    )
+
+    multidiffusion = MultidiffusionOptions(
+        enable=enable_multidiff,
+        views_batch_size=views_batch_size,
+        window_size=window_size,
+        stride=stride,
+    )
+
+    return hires, multidiffusion
 
 
 def img2img_options_ui():
