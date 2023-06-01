@@ -6,7 +6,7 @@ import PIL.Image
 
 
 @dataclass
-class HiresOptions:
+class HiresfixOptions:
     enable: bool = False
     mode: str = "bilinear"
     scale: float = 1.5
@@ -37,7 +37,7 @@ class ImageGenerationOptions:
 
     image: PIL.Image.Image = field(default_factory=PIL.Image.Image)
 
-    hiresfix: HiresOptions = None
+    hiresfix: HiresfixOptions = None
     multidiffusion: MultidiffusionOptions = None
 
     def dict(self):

@@ -2,8 +2,11 @@ import time
 from typing import *
 
 import gradio as gr
-
-from api.models.diffusion import ImageGenerationOptions
+from api.models.diffusion import (
+    HiresfixOptions,
+    MultidiffusionOptions,
+    ImageGenerationOptions,
+)
 from modules import model_manager
 from modules.components import gallery, image_generation_options
 from modules.ui import Tab
@@ -23,13 +26,18 @@ def generate_fn(fn):
             seed,
             width,
             height,
-            hiresfix,
-            multidiffusion,
             init_image,
             strength,
-        ) = as_list[0:14]
+        ) = as_list[0:12]
 
-        plugin_values = dict(list(data.items())[14:])
+        hiresfix_options = tuple(as_list[12:15])
+        multidiffusion_options = tuple(as_list[15:19])
+
+        plugin_values = dict(list(data.items())[19:])
+
+        hiresfix = HiresfixOptions(hiresfix_options)
+
+        multidiffusion = MultidiffusionOptions(multidiffusion_options)
 
         opts = ImageGenerationOptions(
             prompt=prompt,
@@ -83,7 +91,7 @@ class Generate(Tab):
         count = 0
 
         # pre-calculate inference steps
-        if opts.hiresfix:
+        if opts.hiresfix.enable:
             inference_steps = opts.num_inference_steps + int(
                 opts.num_inference_steps * opts.strength
             )
@@ -131,7 +139,7 @@ class Generate(Tab):
                 with gr.Column(scale=1.25):
                     options = image_generation_options.common_options_ui()
 
-                    options += image_generation_options.upscale_options_ui()
+                    upscale_options = image_generation_options.upscale_options_ui()
                     options += image_generation_options.img2img_options_ui()
 
                     plugin_values = image_generation_options.plugin_options_ui()
@@ -147,6 +155,7 @@ class Generate(Tab):
             inputs={
                 *prompts,
                 *options,
+                *upscale_options,
                 *plugin_values_list,
             },
             outputs=[*outputs, generate_button],

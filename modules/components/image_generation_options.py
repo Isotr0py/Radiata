@@ -1,6 +1,5 @@
 import gradio as gr
 
-from api.models.diffusion import HiresOptions, MultidiffusionOptions
 from lib.diffusers.scheduler import SCHEDULERS
 from modules import plugin_loader
 
@@ -131,20 +130,15 @@ def upscale_options_ui():
                         value=16, minimum=8, maximum=64, step=8, label="stride (latent)"
                     )
 
-    hires = HiresOptions(
-        enable=enable_hires,
-        mode=upscaler_mode,
-        scale=scale_slider,
+    return (
+        enable_hires,
+        upscaler_mode,
+        scale_slider,
+        enable_multidiff,
+        views_batch_size,
+        window_size,
+        stride,
     )
-
-    multidiffusion = MultidiffusionOptions(
-        enable=enable_multidiff,
-        views_batch_size=views_batch_size,
-        window_size=window_size,
-        stride=stride,
-    )
-
-    return hires, multidiffusion
 
 
 def img2img_options_ui():
