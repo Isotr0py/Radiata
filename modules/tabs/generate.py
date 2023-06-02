@@ -44,7 +44,7 @@ def generate_fn(fn):
 
         hiresfix = HiresfixOptions(
             enable=enable_hires,
-            upscaler_mode=upscaler_mode,
+            mode=upscaler_mode,
             scale=scale_slider,
         )
 
