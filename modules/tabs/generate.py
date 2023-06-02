@@ -28,16 +28,32 @@ def generate_fn(fn):
             height,
         ) = as_list[0:10]
 
-        hiresfix_options = tuple(as_list[10:13])
-        multidiffusion_options = tuple(as_list[13:17])
+        (
+            enable_hires,
+            enable_multidiff,
+            upscaler_mode,
+            scale_slider,
+            views_batch_size,
+            window_size,
+            stride,
+        ) = as_list[10:17]
 
         init_image, strength = as_list[17:19]
 
         plugin_values = dict(list(data.items())[19:])
 
-        hiresfix = HiresfixOptions(hiresfix_options)
+        hiresfix = HiresfixOptions(
+            enable=enable_hires,
+            upscaler_mode=upscaler_mode,
+            scale=scale_slider,
+        )
 
-        multidiffusion = MultidiffusionOptions(multidiffusion_options)
+        multidiffusion = MultidiffusionOptions(
+            enable=enable_multidiff,
+            views_batch_size=views_batch_size,
+            window_size=window_size,
+            stride=stride,
+        )
 
         opts = ImageGenerationOptions(
             prompt=prompt,

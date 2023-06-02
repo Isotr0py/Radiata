@@ -132,9 +132,9 @@ def upscale_options_ui():
 
     return (
         enable_hires,
+        enable_multidiff,
         upscaler_mode,
         scale_slider,
-        enable_multidiff,
         views_batch_size,
         window_size,
         stride,
