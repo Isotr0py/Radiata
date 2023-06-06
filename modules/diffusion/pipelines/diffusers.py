@@ -419,7 +419,8 @@ class DiffusersPipeline(DiffusersPipelineModel):
             plugin_data=plugin_data,
             opts=opts,
         )
-        self.opts, opts = opts, self.opts   # copy options
+        self.opts = opts
+        opts = self.opts
 
         # Hires.fix
         if opts.hiresfix.enable:
