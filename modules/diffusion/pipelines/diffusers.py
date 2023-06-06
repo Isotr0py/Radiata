@@ -118,8 +118,8 @@ class DiffusersPipeline(DiffusersPipelineModel):
         self.lpw = LongPromptWeightingPipeline(self)
         self.multidiff = None
 
-        self.stage_1st = False
-        self.stage_2nd = False
+        self.stage_1st = None
+        self.stage_2nd = None
         self.session = None
 
     def to(self, device: torch.device = None, dtype: torch.dtype = None):
@@ -301,7 +301,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
         height: int,
         width: int,
         batch_size: int,
-        timesteps: torch.Tensor,
+        timestep: torch.Tensor,
         dtype: torch.dtype,
         generator: torch.Generator,
     ):
@@ -311,11 +311,10 @@ class DiffusersPipeline(DiffusersPipelineModel):
             init_latents = init_latent_dist.sample(generator=generator)
             init_latents = torch.cat([0.18215 * init_latents] * batch_size, dim=0)
             shape = init_latents.shape
-            latent_timestep = timesteps[:1].repeat(shape[0])
             noise = randn_tensor(
                 shape, generator=generator, device=self.device, dtype=dtype
             )
-            latents = self.scheduler.add_noise(init_latents, noise, latent_timestep)
+            latents = self.scheduler.add_noise(init_latents, noise, timestep)
             return latents
 
         # init latents
@@ -488,13 +487,13 @@ class DiffusersPipeline(DiffusersPipelineModel):
             timesteps, opts.num_inference_steps = self.get_timesteps(
                 opts.num_inference_steps, opts.strength
             )
-
+            latent_timestep = timesteps[:1].repeat(opts.batch_size * num_images_per_prompt)
             latents = self.init_2nd_latents(
                 images=images,
                 height=opts.height,
                 width=opts.width,
                 batch_size=opts.batch_size,
-                timesteps=timesteps,
+                timestep=latent_timestep,
                 dtype=latents.dtype,
                 generator=generator,
             )
@@ -608,11 +607,11 @@ class DiffusersPipeline(DiffusersPipelineModel):
             enterer.__exit__(None, None, None)
 
         if self.stage_1st:
-            self.stage_1st = False
+            self.stage_1st = None
             return outputs
 
         if self.stage_2nd:
-            self.stage_2nd = False
+            self.stage_2nd = None
 
         self.session = None
 
