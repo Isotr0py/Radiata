@@ -295,9 +295,15 @@ class DiffusersPipeline(DiffusersPipelineModel):
         timesteps: torch.Tensor,
         dtype: torch.dtype,
         generator: torch.Generator,
-        latents: torch.Tensor,
+        image: torch.Tensor,
     ):
-        shape = latents.shape
+        # init latents
+        image = image.to(self.device).to(dtype)
+        init_latent_dist = self.vae.encode(image).latent_dist
+        init_latents = init_latent_dist.sample(generator=generator)
+        init_latents *= 0.18215
+        # add noise
+        shape = init_latents.shape
         latent_timestep = timesteps[0].repeat(shape[0])
         noise = randn_tensor(
             shape, generator=generator, device=self.device, dtype=dtype
@@ -462,6 +468,8 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 antialias=True if "antialiased" in opts.hiresfix.mode else False,
             )
 
+            image = self.decode_latents(latents)
+
             timesteps, opts.num_inference_steps = self.get_timesteps(
                 opts.num_inference_steps, opts.strength
             )
@@ -470,7 +478,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 timesteps=timesteps,
                 dtype=latents.dtype,
                 generator=generator,
-                latents=latents,
+                latents=image,
             )
 
         # 1. Define call parameters
