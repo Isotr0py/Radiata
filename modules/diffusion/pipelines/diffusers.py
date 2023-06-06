@@ -119,6 +119,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
         self.multidiff = None
 
         self.stage_1st = None
+        self.stage_2nd = None
         self.session = None
 
     def to(self, device: torch.device = None, dtype: torch.dtype = None):
@@ -256,7 +257,10 @@ class DiffusersPipeline(DiffusersPipelineModel):
         dtype: torch.dtype,
         generator: torch.Generator,
         latents: torch.Tensor = None,
+        skip: bool = False,
     ):
+        if skip and latents is not None:
+            return latents
         if image is None:
             shape = (
                 batch_size,
@@ -300,11 +304,13 @@ class DiffusersPipeline(DiffusersPipelineModel):
         images: list[PIL.Image.Image],
     ):
         # init latents
-        images = torch.cat([self.preprocess_image(image, height, width) for image in images])
+        images = torch.cat(
+            [self.preprocess_image(image, height, width) for image in images]
+        )
         images = images.to(self.device).to(dtype)
         init_latent_dist = self.vae.encode(images).latent_dist
         init_latents = init_latent_dist.sample(generator=generator)
-        init_latents *= 0.18215
+        init_latents = torch.cat([0.18215 * init_latents], dim=0)
         # add noise
         shape = init_latents.shape
         latent_timestep = timesteps[:1].repeat(shape[0])
@@ -461,6 +467,8 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 cross_attention_kwargs,
                 plugin_data,
             ).images
+            self.stage_2nd = True
+
             opts.height = int(opts.height * opts.hiresfix.scale)
             opts.width = int(opts.width * opts.hiresfix.scale)
 
@@ -595,6 +603,9 @@ class DiffusersPipeline(DiffusersPipelineModel):
         if self.stage_1st:
             self.stage_1st = None
             return outputs
+
+        if self.stage_2nd:
+            self.stage_2nd = None
 
         self.session = None
 
