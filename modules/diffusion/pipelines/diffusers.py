@@ -320,7 +320,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
 
         # init latents
         images = [self.preprocess_image(image, height, width) for image in images]
-        latents = torch.cat([_prepare_latents(image) for image in images])
+        latents = torch.cat([_prepare_latents(image) for image in images], dim=0)
         return latents
 
     def denoise_latent(
@@ -470,7 +470,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 cross_attention_kwargs,
                 plugin_data,
             ).images
-            self.stage_2nd = True
+            # self.stage_2nd = True
 
             opts.height = int(opts.height * opts.hiresfix.scale)
             opts.width = int(opts.width * opts.hiresfix.scale)
@@ -483,20 +483,21 @@ class DiffusersPipeline(DiffusersPipelineModel):
             )
 
             images = self.create_output(latents, "pil", True).images
+            opts.image = images[0]
 
-            timesteps, opts.num_inference_steps = self.get_timesteps(
-                opts.num_inference_steps, opts.strength
-            )
+            # timesteps, opts.num_inference_steps = self.get_timesteps(
+            #     opts.num_inference_steps, opts.strength
+            # )
 
-            latents = self.init_2nd_latents(
-                images=images,
-                height=opts.height,
-                width=opts.width,
-                batch_size=opts.batch_size,
-                timesteps=timesteps,
-                dtype=latents.dtype,
-                generator=generator,
-            )
+            # latents = self.init_2nd_latents(
+            #     images=images,
+            #     height=opts.height,
+            #     width=opts.width,
+            #     batch_size=opts.batch_size,
+            #     timesteps=timesteps,
+            #     dtype=latents.dtype,
+            #     generator=generator,
+            # )
 
         # 1. Define call parameters
         num_images_per_prompt = 1
