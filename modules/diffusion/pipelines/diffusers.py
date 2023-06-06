@@ -119,7 +119,6 @@ class DiffusersPipeline(DiffusersPipelineModel):
         self.multidiff = None
 
         self.stage_1st = None
-        self.stage_2nd = None
         self.session = None
 
     def to(self, device: torch.device = None, dtype: torch.dtype = None):
@@ -257,11 +256,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
         dtype: torch.dtype,
         generator: torch.Generator,
         latents: torch.Tensor = None,
-        skip: bool = False,
     ):
-        if skip and latents is not None:
-            print("skip prepare")
-            return latents
         if image is None:
             shape = (
                 batch_size,
@@ -294,33 +289,6 @@ class DiffusersPipeline(DiffusersPipelineModel):
             )
             latents = self.scheduler.add_noise(init_latents, noise, timestep)
             return latents
-
-    def init_2nd_latents(
-        self,
-        images: list[PIL.Image.Image],
-        height: int,
-        width: int,
-        batch_size: int,
-        timestep: torch.Tensor,
-        dtype: torch.dtype,
-        generator: torch.Generator,
-    ):
-        def _prepare_latents(image):
-            image = image.to(self.device).to(dtype)
-            init_latent_dist = self.vae.encode(image).latent_dist
-            init_latents = init_latent_dist.sample(generator=generator)
-            init_latents = torch.cat([0.18215 * init_latents] * batch_size, dim=0)
-            shape = init_latents.shape
-            noise = randn_tensor(
-                shape, generator=generator, device=self.device, dtype=dtype
-            )
-            latents = self.scheduler.add_noise(init_latents, noise, timestep)
-            return latents
-
-        # init latents
-        images = [self.preprocess_image(image, height, width) for image in images]
-        latents = torch.cat([_prepare_latents(image) for image in images], dim=0)
-        return latents
 
     def denoise_latent(
         self,
@@ -451,11 +419,12 @@ class DiffusersPipeline(DiffusersPipelineModel):
             plugin_data=plugin_data,
             opts=opts,
         )
+        self.opts, opts = opts, self.opts   # copy options
 
         # Hires.fix
         if opts.hiresfix.enable:
             opts.hiresfix.enable, self.stage_1st = False, True
-            latents = self.__call__(
+            opts.image = self.__call__(
                 opts,
                 generator,
                 eta,
@@ -469,34 +438,16 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 cross_attention_kwargs,
                 plugin_data,
             ).images
-            self.stage_2nd = True
-
             opts.height = int(opts.height * opts.hiresfix.scale)
             opts.width = int(opts.width * opts.hiresfix.scale)
 
-            latents = torch.nn.functional.interpolate(
-                latents,
+            opts.image = torch.nn.functional.interpolate(
+                opts.image,
                 (opts.height // 8, opts.width // 8),
                 mode=opts.hiresfix.mode.split("-")[0],
                 antialias=True if "antialiased" in opts.hiresfix.mode else False,
             )
-
-            images = self.create_output(latents, "pil", True).images
-            # opts.image = images[0]
-
-            timesteps, opts.num_inference_steps = self.get_timesteps(
-                opts.num_inference_steps, opts.strength
-            )
-            latent_timestep = timesteps[:1].repeat(opts.batch_size * num_images_per_prompt)
-            latents = self.init_2nd_latents(
-                images=images,
-                height=opts.height,
-                width=opts.width,
-                batch_size=opts.batch_size,
-                timestep=latent_timestep,
-                dtype=latents.dtype,
-                generator=generator,
-            )
+            opts.image = self.create_output(opts.image, "pil", True).images[0]
 
         # 1. Define call parameters
         num_images_per_prompt = 1
@@ -512,11 +463,10 @@ class DiffusersPipeline(DiffusersPipelineModel):
         self.load_resources(opts=opts)
 
         # 3. Prepare timesteps
-        if not self.stage_2nd:
-            timesteps, opts.num_inference_steps = self.get_timesteps(
-                opts.num_inference_steps, opts.strength if opts.image is not None else None
-            )
-            latent_timestep = timesteps[:1].repeat(opts.batch_size * num_images_per_prompt)
+        timesteps, opts.num_inference_steps = self.get_timesteps(
+            opts.num_inference_steps, opts.strength if opts.image is not None else None
+        )
+        latent_timestep = timesteps[:1].repeat(opts.batch_size * num_images_per_prompt)
 
         # 4. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
@@ -550,8 +500,6 @@ class DiffusersPipeline(DiffusersPipelineModel):
             width=opts.width,
             dtype=prompt_embeds.dtype,
             generator=generator,
-            latents=latents,
-            skip=self.stage_2nd,
         )
 
         torch.cuda.synchronize()
@@ -609,9 +557,6 @@ class DiffusersPipeline(DiffusersPipelineModel):
         if self.stage_1st:
             self.stage_1st = None
             return outputs
-
-        if self.stage_2nd:
-            self.stage_2nd = None
 
         self.session = None
 
