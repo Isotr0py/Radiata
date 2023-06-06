@@ -292,14 +292,17 @@ class DiffusersPipeline(DiffusersPipelineModel):
 
     def init_2nd_latents(
         self,
+        height: int,
+        width: int,
         timesteps: torch.Tensor,
         dtype: torch.dtype,
         generator: torch.Generator,
-        image: torch.Tensor,
+        images: list[PIL.Image.Image],
     ):
         # init latents
-        image = image.to(self.device).to(dtype)
-        init_latent_dist = self.vae.encode(image).latent_dist
+        images = torch.cat([self.preprocess_image(image, height, width) for image in images])
+        images = images.to(self.device).to(dtype)
+        init_latent_dist = self.vae.encode(images).latent_dist
         init_latents = init_latent_dist.sample(generator=generator)
         init_latents *= 0.18215
         # add noise
@@ -468,17 +471,19 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 antialias=True if "antialiased" in opts.hiresfix.mode else False,
             )
 
-            image = self.decode_latents(latents)
+            images = self.create_output(latents, output_type, return_dict)
 
             timesteps, opts.num_inference_steps = self.get_timesteps(
                 opts.num_inference_steps, opts.strength
             )
 
             latents = self.init_2nd_latents(
+                height=opts.height,
+                width=opts.width,
                 timesteps=timesteps,
                 dtype=latents.dtype,
                 generator=generator,
-                image=image,
+                image=images,
             )
 
         # 1. Define call parameters
