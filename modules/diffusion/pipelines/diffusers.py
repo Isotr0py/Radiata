@@ -307,8 +307,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
         init_latents *= 0.18215
         # add noise
         shape = init_latents.shape
-        print(shape)
-        latent_timestep = timesteps[0].repeat(shape[0])
+        latent_timestep = timesteps[:1].repeat(shape[0])
         noise = randn_tensor(
             shape, generator=generator, device=self.device, dtype=dtype
         )
