@@ -437,13 +437,12 @@ class DiffusersPipeline(DiffusersPipelineModel):
             opts.height = int(opts.height * opts.hiresfix.scale)
             opts.width = int(opts.width * opts.hiresfix.scale)
 
-            opts.image = torch.nn.functional.interpolate(
+            latents = torch.nn.functional.interpolate(
                 opts.image,
                 (opts.height // 8, opts.width // 8),
                 mode=opts.hiresfix.mode.split("-")[0],
                 antialias=True if "antialiased" in opts.hiresfix.mode else False,
             )
-            opts.image = self.create_output(opts.image, "pil", True).images[0]
 
         # 1. Define call parameters
         num_images_per_prompt = 1
@@ -496,6 +495,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
             width=opts.width,
             dtype=prompt_embeds.dtype,
             generator=generator,
+            latents=latents,
         )
 
         torch.cuda.synchronize()
