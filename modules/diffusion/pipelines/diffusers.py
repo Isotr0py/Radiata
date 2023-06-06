@@ -1,3 +1,4 @@
+import copy
 import gc
 import inspect
 import os
@@ -419,8 +420,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
             plugin_data=plugin_data,
             opts=opts,
         )
-        self.opts = opts
-        opts = self.opts
+        opts = copy.deepcopy(opts)
 
         # Hires.fix
         if opts.hiresfix.enable:
