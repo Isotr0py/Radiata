@@ -259,7 +259,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
         latents: torch.Tensor = None,
         skip: bool = False,
     ):
-        if skip and latents is not None:
+        if skip and (latents is not None):
             print("skip prepare")
             return latents
         if image is None:
