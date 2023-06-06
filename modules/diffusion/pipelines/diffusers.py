@@ -308,7 +308,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
             image = image.to(self.device).to(dtype)
             init_latent_dist = self.vae.encode(image).latent_dist
             init_latents = init_latent_dist.sample(generator=generator)
-            init_latents = torch.cat([0.18215 * init_latents], dim=0)
+            init_latents = torch.cat([init_latents], dim=0)
             shape = init_latents.shape
             latent_timestep = timesteps[:1].repeat(shape[0])
             noise = randn_tensor(
