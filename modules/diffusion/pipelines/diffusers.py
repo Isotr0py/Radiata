@@ -260,6 +260,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
         skip: bool = False,
     ):
         if skip and latents is not None:
+            print("skip prepare")
             return latents
         if image is None:
             shape = (
