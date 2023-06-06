@@ -420,7 +420,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
         # Hires.fix
         if opts.hiresfix.enable:
             opts.hiresfix.enable, self.stage_1st = False, True
-            opts.image = self.__call__(
+            latents = self.__call__(
                 opts,
                 generator,
                 eta,
@@ -438,7 +438,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
             opts.width = int(opts.width * opts.hiresfix.scale)
 
             latents = torch.nn.functional.interpolate(
-                opts.image,
+                latents,
                 (opts.height // 8, opts.width // 8),
                 mode=opts.hiresfix.mode.split("-")[0],
                 antialias=True if "antialiased" in opts.hiresfix.mode else False,
