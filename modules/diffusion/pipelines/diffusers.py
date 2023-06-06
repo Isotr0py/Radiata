@@ -292,16 +292,17 @@ class DiffusersPipeline(DiffusersPipelineModel):
 
     def init_2nd_latents(
         self,
-        timestep: torch.Tensor,
+        timesteps: torch.Tensor,
         dtype: torch.dtype,
         generator: torch.Generator,
         latents: torch.Tensor,
     ):
         shape = latents.shape
+        latent_timestep = timesteps[0].repeat(shape[0])
         noise = randn_tensor(
             shape, generator=generator, device=self.device, dtype=dtype
         )
-        latents = self.scheduler.add_noise(latents, noise, timestep)
+        latents = self.scheduler.add_noise(latents, noise, latent_timestep)
         return latents
 
     def denoise_latent(
@@ -465,10 +466,8 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 opts.num_inference_steps, opts.strength
             )
 
-            print(latents.shape)
-
             latents = self.init_2nd_latents(
-                timestep=timesteps,
+                timesteps=timesteps,
                 dtype=latents.dtype,
                 generator=generator,
                 latents=latents,
