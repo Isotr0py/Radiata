@@ -304,21 +304,22 @@ class DiffusersPipeline(DiffusersPipelineModel):
         generator: torch.Generator,
         images: list[PIL.Image.Image],
     ):
+        def _prepare_latents(image):
+            image = image.to(self.device).to(dtype)
+            init_latent_dist = self.vae.encode(image).latent_dist
+            init_latents = init_latent_dist.sample(generator=generator)
+            init_latents = torch.cat([0.18215 * init_latents], dim=0)
+            shape = init_latents.shape
+            latent_timestep = timesteps[:1].repeat(shape[0])
+            noise = randn_tensor(
+                shape, generator=generator, device=self.device, dtype=dtype
+            )
+            latents = self.scheduler.add_noise(init_latents, noise, latent_timestep)
+            return latents
+
         # init latents
-        images = torch.cat(
-            [self.preprocess_image(image, height, width) for image in images]
-        )
-        images = images.to(self.device).to(dtype)
-        init_latent_dist = self.vae.encode(images).latent_dist
-        init_latents = init_latent_dist.sample(generator=generator)
-        init_latents = torch.cat([0.18215 * init_latents], dim=0)
-        # add noise
-        shape = init_latents.shape
-        latent_timestep = timesteps[:1].repeat(shape[0])
-        noise = randn_tensor(
-            shape, generator=generator, device=self.device, dtype=dtype
-        )
-        latents = self.scheduler.add_noise(init_latents, noise, latent_timestep)
+        images = [self.preprocess_image(image, height, width) for image in images]
+        latents = torch.cat([_prepare_latents(image) for image in images])
         return latents
 
     def denoise_latent(
@@ -547,7 +548,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
             dtype=prompt_embeds.dtype,
             generator=generator,
             latents=latents,
-            skip=self.stage_2nd
+            skip=self.stage_2nd,
         )
 
         torch.cuda.synchronize()
