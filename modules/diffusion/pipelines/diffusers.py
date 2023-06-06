@@ -466,7 +466,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
             )
 
             latents = self.init_2nd_latents(
-                timestep=latent_timestep,
+                timestep=timesteps,
                 dtype=latents.dtype,
                 generator=generator,
             )
