@@ -447,6 +447,10 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 antialias=True if "antialiased" in opts.hiresfix.mode else False,
             )
 
+            timesteps, opts.num_inference_steps = self.get_timesteps(
+                opts.num_inference_steps, opts.strength
+            )
+
         # 1. Define call parameters
         num_images_per_prompt = 1
         prompt = [opts.prompt] * opts.batch_size
