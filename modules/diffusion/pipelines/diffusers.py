@@ -297,18 +297,19 @@ class DiffusersPipeline(DiffusersPipelineModel):
 
     def init_2nd_latents(
         self,
+        images: list[PIL.Image.Image],
         height: int,
         width: int,
+        batch_size: int,
         timesteps: torch.Tensor,
         dtype: torch.dtype,
         generator: torch.Generator,
-        images: list[PIL.Image.Image],
     ):
         def _prepare_latents(image):
             image = image.to(self.device).to(dtype)
             init_latent_dist = self.vae.encode(image).latent_dist
             init_latents = init_latent_dist.sample(generator=generator)
-            init_latents = torch.cat([init_latents], dim=0)
+            init_latents = torch.cat([0.18215 * init_latents] * batch_size, dim=0)
             shape = init_latents.shape
             latent_timestep = timesteps[:1].repeat(shape[0])
             noise = randn_tensor(
@@ -488,12 +489,12 @@ class DiffusersPipeline(DiffusersPipelineModel):
             )
 
             latents = self.init_2nd_latents(
+                images=images,
                 height=opts.height,
                 width=opts.width,
                 timesteps=timesteps,
                 dtype=latents.dtype,
                 generator=generator,
-                images=images,
             )
 
         # 1. Define call parameters
