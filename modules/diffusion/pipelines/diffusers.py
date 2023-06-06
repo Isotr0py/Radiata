@@ -471,7 +471,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 antialias=True if "antialiased" in opts.hiresfix.mode else False,
             )
 
-            images = self.create_output(latents, output_type, return_dict)
+            images = self.create_output(latents, "pil", True).images
 
             timesteps, opts.num_inference_steps = self.get_timesteps(
                 opts.num_inference_steps, opts.strength
