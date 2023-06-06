@@ -465,6 +465,8 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 opts.num_inference_steps, opts.strength
             )
 
+            print(latents.shape)
+
             latents = self.init_2nd_latents(
                 timestep=timesteps,
                 dtype=latents.dtype,
