@@ -492,6 +492,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 images=images,
                 height=opts.height,
                 width=opts.width,
+                batch_size=opts.batch_size,
                 timesteps=timesteps,
                 dtype=latents.dtype,
                 generator=generator,
