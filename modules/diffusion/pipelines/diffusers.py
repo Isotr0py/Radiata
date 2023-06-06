@@ -470,7 +470,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 cross_attention_kwargs,
                 plugin_data,
             ).images
-            # self.stage_2nd = True
+            self.stage_2nd = True
 
             opts.height = int(opts.height * opts.hiresfix.scale)
             opts.width = int(opts.width * opts.hiresfix.scale)
@@ -483,21 +483,21 @@ class DiffusersPipeline(DiffusersPipelineModel):
             )
 
             images = self.create_output(latents, "pil", True).images
-            opts.image = images[0]
+            # opts.image = images[0]
 
-            # timesteps, opts.num_inference_steps = self.get_timesteps(
-            #     opts.num_inference_steps, opts.strength
-            # )
+            timesteps, opts.num_inference_steps = self.get_timesteps(
+                opts.num_inference_steps, opts.strength
+            )
 
-            # latents = self.init_2nd_latents(
-            #     images=images,
-            #     height=opts.height,
-            #     width=opts.width,
-            #     batch_size=opts.batch_size,
-            #     timesteps=timesteps,
-            #     dtype=latents.dtype,
-            #     generator=generator,
-            # )
+            latents = self.init_2nd_latents(
+                images=images,
+                height=opts.height,
+                width=opts.width,
+                batch_size=opts.batch_size,
+                timesteps=timesteps,
+                dtype=latents.dtype,
+                generator=generator,
+            )
 
         # 1. Define call parameters
         num_images_per_prompt = 1
@@ -513,10 +513,11 @@ class DiffusersPipeline(DiffusersPipelineModel):
         self.load_resources(opts=opts)
 
         # 3. Prepare timesteps
-        timesteps, opts.num_inference_steps = self.get_timesteps(
-            opts.num_inference_steps, opts.strength if opts.image is not None else None
-        )
-        latent_timestep = timesteps[:1].repeat(opts.batch_size * num_images_per_prompt)
+        if not self.stage_2nd:
+            timesteps, opts.num_inference_steps = self.get_timesteps(
+                opts.num_inference_steps, opts.strength if opts.image is not None else None
+            )
+            latent_timestep = timesteps[:1].repeat(opts.batch_size * num_images_per_prompt)
 
         # 4. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
