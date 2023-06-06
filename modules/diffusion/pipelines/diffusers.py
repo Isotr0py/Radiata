@@ -295,7 +295,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
         timestep: torch.Tensor,
         dtype: torch.dtype,
         generator: torch.Generator,
-        latents: torch.Tensor = None,
+        latents: torch.Tensor,
     ):
         shape = latents.shape
         noise = randn_tensor(
@@ -469,6 +469,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 timestep=timesteps,
                 dtype=latents.dtype,
                 generator=generator,
+                latents=latents,
             )
 
         # 1. Define call parameters
