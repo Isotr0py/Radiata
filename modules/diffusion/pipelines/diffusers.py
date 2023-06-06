@@ -478,7 +478,7 @@ class DiffusersPipeline(DiffusersPipelineModel):
                 timesteps=timesteps,
                 dtype=latents.dtype,
                 generator=generator,
-                latents=image,
+                image=image,
             )
 
         # 1. Define call parameters
