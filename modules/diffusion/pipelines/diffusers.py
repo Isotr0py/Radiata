@@ -118,8 +118,8 @@ class DiffusersPipeline(DiffusersPipelineModel):
         self.lpw = LongPromptWeightingPipeline(self)
         self.multidiff = None
 
-        self.stage_1st = None
-        self.stage_2nd = None
+        self.stage_1st = False
+        self.stage_2nd = False
         self.session = None
 
     def to(self, device: torch.device = None, dtype: torch.dtype = None):
@@ -608,11 +608,11 @@ class DiffusersPipeline(DiffusersPipelineModel):
             enterer.__exit__(None, None, None)
 
         if self.stage_1st:
-            self.stage_1st = None
+            self.stage_1st = False
             return outputs
 
         if self.stage_2nd:
-            self.stage_2nd = None
+            self.stage_2nd = False
 
         self.session = None
 
